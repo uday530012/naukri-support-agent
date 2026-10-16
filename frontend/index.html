@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Naukri Support Agent</title>
+
+    <link rel="stylesheet"
+          href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- HEADER -->
+        <header class="header">
+
+            <div class="header-left">
+
+                <div class="bot-icon">
+                    🤖
+                </div>
+
+                <div>
+                    <h1>Naukri Support Assistant</h1>
+
+                    <p>
+                        AI-powered job application support
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="status">
+                <span class="status-dot"></span>
+                Online
+            </div>
+
+        </header>
+
+
+        <!-- CHAT AREA -->
+        <main id="chat-container"
+              class="chat-container">
+
+            <div class="message assistant">
+
+                <div class="avatar">
+                    🤖
+                </div>
+
+                <div class="message-content">
+
+                    <div class="message-name">
+                        Naukri Assistant
+                    </div>
+
+                    <div class="message-bubble">
+                        Hello! 👋
+                        <br><br>
+                        I'm your Naukri Support Assistant.
+                        How can I help you today?
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <!-- INPUT AREA -->
+        <div class="input-area">
+
+            <input
+                type="text"
+                id="message-input"
+                placeholder="Type your question..."
+                autocomplete="off"
+            >
+
+            <button
+                id="send-button"
+                onclick="sendMessage()">
+
+                Send
+
+            </button>
+
+        </div>
+
+
+        <!-- FOOTER -->
+        <footer>
+
+            Powered by RAG • FastAPI • AI Agent
+
+        </footer>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,3 @@
+Applicant Data Retention Policy
+
+Applicant information should be retained only for legitimate recruitment, compliance, operational, or other approved business purposes. Access to applicant information should be limited to authorized personnel who require it for their responsibilities. Applicant data should be securely deleted or anonymized when the applicable retention period has ended, subject to legal or organizational requirements.
