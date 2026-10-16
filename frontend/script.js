@@ -1,288 +1,149 @@
-const input = document.getElementById("message-input");
-const sendButton = document.getElementById("send-button");
+const API_URL = "/chat";
+
 const chatContainer = document.getElementById("chat-container");
+const messageInput = document.getElementById("message-input");
+const sendButton = document.getElementById("send-button");
 
 
-// ============================================================
-// SEND MESSAGE
-// ============================================================
+function addUserMessage(message) {
+    const messageWrapper = document.createElement("div");
+    messageWrapper.className = "user-message";
+
+    messageWrapper.textContent = message;
+
+    chatContainer.appendChild(messageWrapper);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+function addAssistantMessage(result) {
+    const messageWrapper = document.createElement("div");
+    messageWrapper.className = "assistant-message";
+
+    let responseText = "";
+
+    if (result.response) {
+        responseText += result.response;
+    }
+
+    if (result.source) {
+        responseText += "\n\nSource: " + result.source;
+    }
+
+    if (result.next_action) {
+        responseText += "\n\nNext Action: " + result.next_action;
+    }
+
+    messageWrapper.textContent = responseText;
+
+    chatContainer.appendChild(messageWrapper);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+function addLoadingMessage() {
+    const loadingMessage = document.createElement("div");
+
+    loadingMessage.id = "loading-message";
+    loadingMessage.className = "assistant-message";
+    loadingMessage.textContent = "Thinking...";
+
+    chatContainer.appendChild(loadingMessage);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+function removeLoadingMessage() {
+    const loadingMessage = document.getElementById("loading-message");
+
+    if (loadingMessage) {
+        loadingMessage.remove();
+    }
+}
+
 
 async function sendMessage() {
 
-    const message = input.value.trim();
+    const message = messageInput.value.trim();
 
     if (!message) {
         return;
     }
 
-
-    // Show user message
-
-    addMessage(
-        message,
-        "user"
-    );
-
+    // Show user's message
+    addUserMessage(message);
 
     // Clear input
+    messageInput.value = "";
 
-    input.value = "";
-
-
-    // Disable button
-
+    // Disable controls
     sendButton.disabled = true;
-    sendButton.textContent = "Sending...";
+    messageInput.disabled = true;
 
-
-    // Show temporary loading message
-
-    const loadingMessage = addMessage(
-        "Thinking...",
-        "assistant"
-    );
-
+    // Show loading
+    addLoadingMessage();
 
     try {
 
-        const response = await fetch(
-            "http://127.0.0.1:8000/chat",
-            {
-                method: "POST",
+        const response = await fetch(API_URL, {
+            method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-                body: JSON.stringify({
-                    message: message
-                })
-            }
-        );
+            body: JSON.stringify({
+                message: message
+            })
+        });
+
+
+        removeLoadingMessage();
 
 
         if (!response.ok) {
-
-            throw new Error(
-                "Server returned an error."
-            );
-
+            throw new Error("Server returned status " + response.status);
         }
 
 
-        const data = await response.json();
+        const result = await response.json();
 
-
-        // Remove loading message
-
-        loadingMessage.remove();
-
-
-        // Display response
-
-        addAgentResponse(data);
+        addAssistantMessage(result);
 
 
     } catch (error) {
 
-        loadingMessage.remove();
+        removeLoadingMessage();
 
-        addMessage(
-            "Sorry, I could not connect to the support agent.",
-            "assistant"
-        );
+        console.error("Chat error:", error);
 
-        console.error(error);
+        addAssistantMessage({
+            response: "Sorry, I could not connect to the support agent. Please try again.",
+            source: "System",
+            next_action: "Check that the FastAPI server is running."
+        });
 
+    } finally {
+
+        sendButton.disabled = false;
+        messageInput.disabled = false;
+
+        messageInput.focus();
     }
-
-
-    // Enable button
-
-    sendButton.disabled = false;
-    sendButton.textContent = "Send";
-
 }
 
 
-// ============================================================
-// ADD NORMAL MESSAGE
-// ============================================================
-
-function addMessage(message, sender) {
-
-    const messageDiv =
-        document.createElement("div");
-
-    messageDiv.className =
-        `message ${sender}`;
+// Send button
+sendButton.addEventListener("click", sendMessage);
 
 
-    if (sender === "assistant") {
+// Press Enter to send
+messageInput.addEventListener("keydown", function(event) {
 
-        messageDiv.innerHTML = `
+    if (event.key === "Enter") {
 
-            <div class="avatar">
-                🤖
-            </div>
+        event.preventDefault();
 
-            <div class="message-content">
-
-                <div class="message-name">
-                    Naukri Assistant
-                </div>
-
-                <div class="message-bubble">
-                    ${escapeHtml(message)}
-                </div>
-
-            </div>
-
-        `;
-
-    } else {
-
-        messageDiv.innerHTML = `
-
-            <div class="message-content">
-
-                <div class="message-name">
-                    You
-                </div>
-
-                <div class="message-bubble">
-                    ${escapeHtml(message)}
-                </div>
-
-            </div>
-
-        `;
-
+        sendMessage();
     }
-
-
-    chatContainer.appendChild(messageDiv);
-
-    scrollToBottom();
-
-    return messageDiv;
-}
-
-
-// ============================================================
-// ADD AGENT RESPONSE
-// ============================================================
-
-function addAgentResponse(data) {
-
-    const messageDiv =
-        document.createElement("div");
-
-    messageDiv.className =
-        "message assistant";
-
-
-    const response =
-        data.response || "No response received.";
-
-
-    const source =
-        data.source || "";
-
-
-    const nextAction =
-        data.next_action || "";
-
-
-    messageDiv.innerHTML = `
-
-        <div class="avatar">
-            🤖
-        </div>
-
-        <div class="message-content">
-
-            <div class="message-name">
-                Naukri Assistant
-            </div>
-
-            <div class="message-bubble">
-
-                ${escapeHtml(response)}
-
-                ${
-                    source
-                    ? `<br><br>
-                       <small>
-                       Source: ${escapeHtml(source)}
-                       </small>`
-                    : ""
-                }
-
-                ${
-                    nextAction
-                    ? `<br><br>
-                       <strong>
-                       Next Action:
-                       </strong>
-                       ${escapeHtml(nextAction)}`
-                    : ""
-                }
-
-            </div>
-
-        </div>
-
-    `;
-
-
-    chatContainer.appendChild(messageDiv);
-
-    scrollToBottom();
-}
-
-
-// ============================================================
-// ENTER KEY
-// ============================================================
-
-input.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (event.key === "Enter") {
-
-            sendMessage();
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// SCROLL
-// ============================================================
-
-function scrollToBottom() {
-
-    chatContainer.scrollTop =
-        chatContainer.scrollHeight;
-
-}
-
-
-// ============================================================
-// BASIC HTML ESCAPE
-// ============================================================
-
-function escapeHtml(text) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent = text;
-
-    return div.innerHTML;
-
-}
+});
